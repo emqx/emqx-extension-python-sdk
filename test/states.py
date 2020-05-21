@@ -1,0 +1,3 @@
+
+EMQX_OK = 0
+EMQX_ERROR = 1

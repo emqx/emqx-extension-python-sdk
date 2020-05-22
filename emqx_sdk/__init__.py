@@ -1,1 +1,1 @@
-from .hooks import EmqxHookSdk
+from .hooks import EmqxHookSdk, hooks_handler

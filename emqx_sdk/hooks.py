@@ -1,7 +1,8 @@
-from .states import EMQX_OK
+from functools import wraps
+from .states import EMQX_OK, EMQX_ERROR
 from .types import (
-    EMQX_TOPICS, EMQX_CLIENTINFO_T, EMQX_PROPS_T,
-    EMQX_OPTS_T, EMQX_MESSAGE_T
+    EMQX_TOPICS, EMQX_CLIENTINFO_PARSE_T, EMQX_PROPS_T,
+    EMQX_OPTS_T, EMQX_MESSAGE_PARSE_T
 )
 
 
@@ -44,38 +45,38 @@ class EmqxHookSdk:
             action_func = f'{hook_instance}.{key}'
             hook_spec = (action, hook_filename, action_func, topics)
             hooks_spec.append(hook_spec)
-        return EMQX_OK, (hooks_spec, ())
+        return (EMQX_OK, (hooks_spec, ()))
 
     # Clients
     def on_client_connect(self,
-                          conninfo: EMQX_CLIENTINFO_T = None,
+                          conninfo: EMQX_CLIENTINFO_PARSE_T = None,
                           props: dict = None,
                           state: tuple = None):
         ...
 
     def on_client_connack(self,
-                          conninfo: EMQX_CLIENTINFO_T,
+                          conninfo: EMQX_CLIENTINFO_PARSE_T,
                           props: dict,
                           state: tuple):
         ...
 
-    def on_client_connected(self, clientinfo: EMQX_CLIENTINFO_T, state: tuple):
+    def on_client_connected(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, state: tuple):
         ...
 
     def on_client_disconnected(self,
-                               clientinfo: EMQX_CLIENTINFO_T,
+                               clientinfo: EMQX_CLIENTINFO_PARSE_T,
                                reason: str,
                                state: tuple):
         ...
 
     @staticmethod
-    def on_client_authenticate(clientinfo: EMQX_CLIENTINFO_T,
+    def on_client_authenticate(clientinfo: EMQX_CLIENTINFO_PARSE_T,
                                authresult: bool,
                                state: tuple) -> bool:
         ...
 
     def on_client_check_acl(self,
-                            clientinfo: EMQX_CLIENTINFO_T,
+                            clientinfo: EMQX_CLIENTINFO_PARSE_T,
                             pubsub: str,
                             topic: str,
                             result: bool,
@@ -83,72 +84,107 @@ class EmqxHookSdk:
         ...
 
     def on_client_subscribe(self,
-                            clientinfo: EMQX_CLIENTINFO_T,
+                            clientinfo: EMQX_CLIENTINFO_PARSE_T,
                             props: EMQX_PROPS_T,
                             topics: set,
                             state: tuple):
         ...
 
     def on_client_unsubscribe(self,
-                              clientinfo: EMQX_CLIENTINFO_T,
+                              clientinfo: EMQX_CLIENTINFO_PARSE_T,
                               props: EMQX_PROPS_T,
                               topics: set,
                               state: tuple):
         ...
 
     # Sessions
-    def on_session_created(self, clientinfo: EMQX_CLIENTINFO_T, state: tuple):
+    def on_session_created(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, state: tuple):
         ...
 
     def on_session_subscribed(self,
-                              clientinfo: EMQX_CLIENTINFO_T,
+                              clientinfo: EMQX_CLIENTINFO_PARSE_T,
                               topic: str,
                               opts: EMQX_OPTS_T,
                               state: tuple):
         ...
 
     def on_session_unsubscribed(self,
-                                clientinfo: EMQX_CLIENTINFO_T,
+                                clientinfo: EMQX_CLIENTINFO_PARSE_T,
                                 topic: str,
                                 state: tuple):
         ...
 
-    def on_session_resumed(self, clientinfo: EMQX_CLIENTINFO_T, state: tuple):
+    def on_session_resumed(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, state: tuple):
         ...
 
-    def on_session_discarded(self, clientinfo: EMQX_CLIENTINFO_T, state: tuple):
+    def on_session_discarded(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, state: tuple):
         ...
 
-    def on_session_takeovered(self, clientinfo: EMQX_CLIENTINFO_T, state: tuple):
+    def on_session_takeovered(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, state: tuple):
         ...
 
     def on_session_terminated(self,
-                              clientinfo: EMQX_CLIENTINFO_T,
+                              clientinfo: EMQX_CLIENTINFO_PARSE_T,
                               reason: str,
                               state: tuple):
         ...
 
     # Messages
-    def on_message_publish(self, message: EMQX_MESSAGE_T, state: tuple):
+    def on_message_publish(self, message: EMQX_MESSAGE_PARSE_T, state: tuple):
         ...
 
     def on_message_delivered(self,
-                             clientinfo: EMQX_CLIENTINFO_T,
-                             message: EMQX_MESSAGE_T,
+                             clientinfo: EMQX_CLIENTINFO_PARSE_T,
+                             message: EMQX_MESSAGE_PARSE_T,
                              state: tuple):
         ...
 
     def on_message_acked(self,
-                         clientinfo: EMQX_CLIENTINFO_T,
-                         message: EMQX_MESSAGE_T,
+                         clientinfo: EMQX_CLIENTINFO_PARSE_T,
+                         message: EMQX_MESSAGE_PARSE_T,
                          state: tuple):
         ...
 
     def on_message_dropped(self,
-                           message: EMQX_MESSAGE_T,
+                           message: EMQX_MESSAGE_PARSE_T,
                            reason: str,
                            state: tuple):
         ...
 
     def parse(self):
         ...
+
+
+class hooks_handler:
+    def __init__(self, topics = None):
+        pass
+ 
+    def __call__(self, func):
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            new_args = []
+            for arg in args:
+              arg = self.parse(arg)
+              new_args.append(arg)
+            result=func(*tuple(new_args), **kwargs)
+            if isinstance(result, bool):
+              return (EMQX_OK, True) if result else (EMQX_OK, False)
+            return result
+        return wrapped_function
+ 
+    def parse(self, data):
+        if not isinstance(data, list):
+          if isinstance(data, bytes):
+              return data.decode('utf-8')
+          return data
+        from emqx_sdk.types import EMQXBase
+        base_data = EMQXBase()
+        for idx, val in enumerate(data):
+            k, v = val
+            k = k.decode('utf-8')
+            v = v.decode('utf-8') if isinstance(v, bytes) else v
+            if k == 'from':
+                k = 'from_clientid'
+            base_data.__dict__[k] = v
+            setattr(base_data, k, v)
+        return base_data

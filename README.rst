@@ -2,31 +2,15 @@
   EMQ X extension Python SDK
 ===================================
 
-+----------------+------------------------------------------------------+
-|Project site    | https://github.com/emqx-extension-python-sdk         |
-+----------------+------------------------------------------------------+
-|Issues          | https://github.com/emqx/extension-python-sdk/issues/ |
-+----------------+------------------------------------------------------+
-|Documentation   | todo.....                                            |
-+----------------+------------------------------------------------------+
-|Author          | emqx(taodk@emqx.io)                                    |
-+----------------+------------------------------------------------------+
-|Latest Version  | 0.1                                                  |
-+----------------+------------------------------------------------------+
-|Python versions | 3.6 or above                                         |
-+----------------+------------------------------------------------------+
-|Keywords        | emqx                                                 |
-+----------------+------------------------------------------------------+
-
 Using Python to handle the hooks in `EMQ X <https://emqx.io/>`__ to
 realize client authentication, ACL check and message.
 
 Install
 =======
-
+EMQ X extension requires Python 3.6 or later
 ::
 
-   pip3 install emqx-extension-hook
+   pip install emqx-extension-sdk
 
 Download
 ========
@@ -55,8 +39,8 @@ example:
 
    ## /emqx-ext/examples/client.py
 
-   from emqx-extension-hook.hooks import EmqxHookSdk, hooks_handler
-   from emqx-extension-hook.types import EMQX_CLIENTINFO_PARSE_T, EMQX_MESSAGE_PARSE_T
+   from emqx_extension.hooks import EmqxHookSdk, hooks_handler
+   from emqx_extension.hooks import EMQX_CLIENTINFO_PARSE_T, EMQX_MESSAGE_PARSE_T
 
 
    class CustomHook(EmqxHookSdk):
@@ -112,37 +96,3 @@ Load plugin
 ::
 
    ./bin/emqx_ctl plugins load emqx_extension_hook
-
-
-
-
-Develop
-=======
-
-Installation
-~~~~~~~~~~~~
-
-You can install emqx-extension-python-sdk either via the Python Package Index (PyPI) or from source.
-
-To install using `setup`:
-
-.. sourcecode:: console
-
-    $ python setup.py develop
-
-To install using `pip`:
-
-.. sourcecode:: console
-
-    $ pip install -U emqx_sdk
-
-
-Run example
-~~~~~~~~~~~~
-.. sourcecode:: console
-
-    $
-
-
-FAQ
-============

@@ -1,5 +1,6 @@
 from functools import wraps
-from .states import EMQX_OK, EMQX_ERROR
+
+from .states import EMQX_OK
 from .types import (
     EMQX_TOPICS, EMQX_CLIENTINFO_PARSE_T, EMQX_PROPS_T,
     EMQX_OPTS_T, EMQX_MESSAGE_PARSE_T
@@ -45,7 +46,7 @@ class EmqxHookSdk:
             action_func = f'{hook_instance}.{key}'
             hook_spec = (action, hook_filename, action_func, topics)
             hooks_spec.append(hook_spec)
-        return (EMQX_OK, (hooks_spec, ()))
+        return EMQX_OK, (hooks_spec, ())
 
     # Clients
     def on_client_connect(self,
@@ -156,27 +157,28 @@ class EmqxHookSdk:
 
 
 class hooks_handler:
-    def __init__(self, topics = None):
+    def __init__(self, topics=None):
         pass
- 
+
     def __call__(self, func):
         @wraps(func)
         def wrapped_function(*args, **kwargs):
             new_args = []
             for arg in args:
-              arg = self.parse(arg)
-              new_args.append(arg)
-            result=func(*tuple(new_args), **kwargs)
+                arg = self.parse(arg)
+                new_args.append(arg)
+            result = func(*tuple(new_args), **kwargs)
             if isinstance(result, bool):
-              return (EMQX_OK, True) if result else (EMQX_OK, False)
+                return (EMQX_OK, True) if result else (EMQX_OK, False)
             return result
+
         return wrapped_function
- 
+
     def parse(self, data):
         if not isinstance(data, list):
-          if isinstance(data, bytes):
-              return data.decode('utf-8')
-          return data
+            if isinstance(data, bytes):
+                return data.decode('utf-8')
+            return data
         from emqx_sdk.types import EMQXBase
         base_data = EMQXBase()
         for idx, val in enumerate(data):

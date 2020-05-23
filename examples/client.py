@@ -1,5 +1,5 @@
-from emqx_sdk.hooks import EmqxHookSdk, hooks_handler
-from emqx_sdk.types import EMQX_CLIENTINFO_PARSE_T, EMQX_MESSAGE_PARSE_T
+from emqx_extension.hooks import EmqxHookSdk, hooks_handler
+from emqx_extension.types import EMQX_CLIENTINFO_PARSE_T
 
 
 class CustomHook(EmqxHookSdk):
@@ -31,7 +31,8 @@ class CustomHook(EmqxHookSdk):
         return True
 
     @hooks_handler()
-    def on_client_authenticate(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, authresult, state) -> bool:
+    def on_client_authenticate(self, clientinfo: EMQX_CLIENTINFO_PARSE_T, authresult,
+                               state) -> bool:
         print(
             f'[Python SDK] [on_client_authenticate] {clientinfo.clientid} authenticate')
         if clientinfo.clientid != '':

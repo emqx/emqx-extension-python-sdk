@@ -1,5 +1,5 @@
 from emqx_extension.hooks import EmqxHookSdk, hooks_handler
-from emqx_extension.types import EMQX_CLIENTINFO_PARSE_T
+from emqx_extension.types import EMQX_CLIENTINFO_PARSE_T, EMQX_MESSAGE_PARSE_T
 
 
 class CustomHook(EmqxHookSdk):
@@ -38,13 +38,19 @@ class CustomHook(EmqxHookSdk):
         if clientinfo.clientid != '':
             return True
         return False
+    
+    # on_message_* only EMQ X Enterprise
+    @hooks_handler()
+    def on_message_publish(self, message: EMQX_MESSAGE_PARSE_T, state):
+        print(
+            f'[Python SDK] [on_message_publish] {message.topic} {message.payload}')
 
 
-emqx_hook = CustomHook(hook_module='client.emqx_hook')
+emqx_hook = CustomHook(hook_module=f'{__name__}.emqx_hook')
 
 
 def init():
-    return emqx_hook.on_start()
+    return emqx_hook.start()
 
 
 def deinit():

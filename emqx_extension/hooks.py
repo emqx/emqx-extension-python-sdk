@@ -34,7 +34,7 @@ class EmqxHookSdk:
     def __init__(self, hook_module: str):
         self.hook_module = hook_module
 
-    def on_start(self, topics: EMQX_TOPICS = None):
+    def start(self, topics: EMQX_TOPICS = None):
         hooks_spec = []
         topics = topics if topics else []
         hook_filename, hook_instance = self.hook_module.split('.')
@@ -179,7 +179,7 @@ class hooks_handler:
             if isinstance(data, bytes):
                 return data.decode('utf-8')
             return data
-        from emqx_sdk.types import EMQXBase
+        from emqx_extension.types import EMQXBase
         base_data = EMQXBase()
         for idx, val in enumerate(data):
             k, v = val
